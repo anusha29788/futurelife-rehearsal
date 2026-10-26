@@ -1,0 +1,2 @@
+function simulate(p,mode){let cash=p.cash,series=[cash],missed=0;const delay=mode==='prepare'?6:0,retained=mode==='part'?.5:0;for(let m=0;m<delay+p.months;m++){const off=m>=delay;cash+=(off?p.income*retained:p.income)-p.expenses-(off?p.care:0);if(off)missed+=p.retirement*(1-retained);series.push(cash)}return{cash,series,missed,buffer:cash/(p.expenses+p.care),months:delay+p.months}}
+if(typeof module!=='undefined')module.exports={simulate};

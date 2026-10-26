@@ -1,0 +1,10 @@
+{
+  "name": "futurelife-rehearsal",
+  "version": "1.0.0",
+  "private": true,
+  "description": "FutureLife Rehearsal BFSI prototype",
+  "scripts": {
+    "start": "python3 -m http.server 8080 --directory dist",
+    "test": "node tests/model.test.js"
+  }
+}
