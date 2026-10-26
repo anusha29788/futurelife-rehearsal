@@ -1,3 +1,157 @@
-<!DOCTYPE html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FutureLife Rehearsal</title><style>
-*{box-sizing:border-box}body{margin:0;background:#f3f5ef;color:#193e38;font:15px system-ui}header{background:white;border-bottom:1px solid #dce4da;padding:22px 4%;display:flex;justify-content:space-between;align-items:center}.brand{font:700 24px Georgia}button,input,textarea{font:inherit}button{cursor:pointer;border:1px solid #cedbd0;background:white;color:#193e38;padding:11px 17px;border-radius:8px}button.active,.primary{background:#193e38;color:white}button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #c99543;outline-offset:3px}main{max-width:1400px;margin:auto;padding:35px 4%}h1{font:normal 46px Georgia;margin:12px 0}h2{font:normal 27px Georgia}h3{font-size:17px}p{color:#657970;line-height:1.65}.eyebrow{font-size:11px;letter-spacing:1.7px;text-transform:uppercase;color:#6d8377}.badge{font-size:11px;background:#e9efe5;padding:8px;border-radius:5px}.layout{display:grid;grid-template-columns:300px 1fr;gap:24px;margin-top:28px}.panel{background:white;border:1px solid #dce4da;border-radius:14px;padding:24px}.row{display:flex;justify-content:space-between;align-items:center;gap:12px}label{display:block;font-size:12px;color:#657970;margin:14px 0 6px}input[type=number],textarea{width:100%;border:1px solid #dce4da;border-radius:7px;padding:10px;background:#fafbf8;color:#193e38}textarea{min-height:85px}input[type=range]{width:100%;accent-color:#21685b}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}.card{text-align:left;padding:18px;min-height:160px}.card.selected{background:#edf4eb;border:2px solid #21685b}.card strong{display:block;font:28px Georgia;margin:17px 0 8px}.card small{display:block;color:#657970;line-height:1.6}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin:24px 0}.metric{border-left:2px solid #dce4da;padding-left:13px}.metric b{display:block;font-size:25px;margin:6px 0}.notice{background:#f7efdd;padding:15px;border-radius:8px;line-height:1.65;font-size:13px}.legend{font-size:12px;color:#657970;display:flex;gap:18px;flex-wrap:wrap}.steps{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px}.check{display:flex;align-items:start;gap:10px;border-bottom:1px solid #e3e9df;padding:12px 0;font-size:14px;line-height:1.6}.check input{margin-top:5px;accent-color:#21685b}.hidden{display:none!important}pre{white-space:pre-wrap;font:15px/1.8 system-ui}.footer{font-size:11px;margin-top:25px}.presets{display:flex;gap:8px;flex-wrap:wrap}.presets button{font-size:12px;border-radius:20px;padding:8px 12px}.brief{max-width:850px;margin:auto}svg{width:100%;height:240px}details{margin-top:18px;font-size:13px;line-height:1.7}@media(max-width:900px){.layout{grid-template-columns:1fr}.inputs{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}}@media(max-width:600px){h1{font-size:35px}header{flex-wrap:wrap;gap:15px}.cards,.steps,.metrics{grid-template-columns:1fr}.inputs{display:block}.row{flex-wrap:wrap}main{padding:25px 5%}}
-</style><header><div class="brand">◈ FutureLife <span style="color:#6b8c76">Rehearsal</span></div><nav><button id="studioTab" class="active">Rehearsal studio</button> <button id="advisorTab">Advisor brief</button></nav><span class="badge">BFSI concept lab · synthetic data</span></header><main><section id="studio"><div class="row"><div><span class="eyebrow">A little clarity before a big decision</span><h1>Your life. A few possible futures.</h1><p>Rehearse a career break. Understand the trade-offs. Plan your next conversation.</p></div><button id="reset">Reset demo</button></div><div class="layout"><aside class="panel"><span class="eyebrow">01 / Your starting point</span><h3>Maya’s household</h3><p>Age 47 · US household · USD<br><small>Editable sample information.</small></p><div class="inputs" id="inputs"></div><label for="months">Career break: <b id="duration"></b> months</label><input type="range" id="months" min="1" max="18" value="6"><label for="goal">What matters most?</label><textarea id="goal"></textarea><p style="font-size:11px">Sample information only. Changes are saved in this browser.</p></aside><div><div class="panel"><div class="row"><div><span class="eyebrow">02 / Rehearse your decision</span><h2>Can I afford to take time to care?</h2></div><span class="badge">Transparent scenario engine</span></div><div class="presets"><button data-month="6">6-month care break</button><button data-month="9">What if it takes 9 months?</button><button data-month="12">Explore a full year</button></div><div id="cards" class="cards"></div><div class="row"><h3>Accessible savings over time</h3><span class="eyebrow">USD · month from today</span></div><svg id="chart" role="img" aria-label="Savings by scenario"></svg><div class="legend"><span style="color:#21685b">● Break now</span><span style="color:#b98632">● Part-time</span><span style="color:#7e8eae">● Prepare 6 months</span><span>--- Emergency floor</span></div><div id="metrics" class="metrics"></div><div id="insight" class="notice" aria-live="polite"></div><details><summary>Assumptions and model limitations</summary><p>Cash changes monthly by take-home income minus living expenses and, during the break, care costs. Part-time retains 50% of income and employee retirement contributions. Prepare delays the break by six months, saving the normal surplus first. Emergency floor equals selected months of living plus care expenses. Retirement contribution gaps are shown separately; they are not deducted again from take-home pay. No investment returns, taxes, inflation, employer match, benefits changes or penalties are modeled. Negative balances indicate an unfunded gap, not available credit. Scenario end dates differ; compare common months on the chart. Outputs are illustrative, not validated financial planning.</p></details></div><div class="steps"><div class="panel"><span class="eyebrow">03 / Prepare for the next step</span><h3>Your preparation checklist</h3><div id="checks"></div></div><div class="panel"><span class="eyebrow">04 / Bring the context</span><h3>A better advisor conversation</h3><p>Prepare a brief with your selected scenario, assumptions and unresolved questions. Nothing is sent automatically.</p><button class="primary" id="prepare">Prepare advisor brief →</button><p style="font-size:12px">AI conversation is simulated. Financial calculations use a deterministic model.</p></div></div></div></div></section><section id="advisor" class="hidden brief"><span class="eyebrow">Advisor workspace / discussion preparation</span><h1>A decision worth discussing.</h1><p>Review these assumptions before considering any recommendation.</p><div class="panel"><div class="row"><h2>Household rehearsal brief</h2><span class="badge">Draft · not sent</span></div><pre id="brief"></pre><label for="notes">Additional questions for your advisor</label><textarea id="notes" placeholder="What happens to employer health coverage during the break?"></textarea><label class="check"><input type="checkbox" id="consent">I reviewed the sample details and want to include them in the download.</label><div class="row" style="margin-top:20px"><button class="primary" id="download">Download discussion brief</button><button id="back">← Back to rehearsal</button></div><p id="status" role="status"></p></div></section><p class="footer">Illustrative prototype · Synthetic data · Educational scenarios, not financial advice or a forecast · No account connections or transactions.</p></main><script src="model.js"></script><script src="app.js"></script></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>FutureLife Rehearsal</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#f3f5ef;color:#193e38;font:15px system-ui}
+    header{background:white;border-bottom:1px solid #dce4da;padding:22px 4%;display:flex;justify-content:space-between;align-items:center}
+    .brand{font:700 24px Georgia}
+    button,input,textarea{font:inherit}
+    button{cursor:pointer;border:1px solid #cedbd0;background:white;color:#193e38;padding:11px 17px;border-radius:8px}
+    button.active,.primary{background:#193e38;color:white}
+    button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #c99543;outline-offset:3px}
+    main{max-width:1400px;margin:auto;padding:35px 4%}
+    h1{font:normal 46px Georgia;margin:12px 0}
+    h2{font:normal 27px Georgia}
+    h3{font-size:17px}
+    p{color:#657970;line-height:1.65}
+    .eyebrow{font-size:11px;letter-spacing:1.7px;text-transform:uppercase;color:#6d8377}
+    .badge{font-size:11px;background:#e9efe5;padding:8px;border-radius:5px}
+    .layout{display:grid;grid-template-columns:300px 1fr;gap:24px;margin-top:28px}
+    .panel{background:white;border:1px solid #dce4da;border-radius:14px;padding:24px}
+    .row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    label{display:block;font-size:12px;color:#657970;margin:14px 0 6px}
+    input[type=number],input[type=text],textarea{width:100%;border:1px solid #dce4da;border-radius:7px;padding:10px;background:#fafbf8;color:#193e38}
+    textarea{min-height:85px}
+    input[type=range]{width:100%;accent-color:#21685b}
+    .scenario-fields{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
+    .scenario-fields .wide{grid-column:1/-1}
+    .card{padding:18px;border:1px solid #dce4da;border-radius:10px;background:#fafbf8}
+    .card strong{display:block;font:28px Georgia;margin:12px 0 8px}
+    .card small{display:block;color:#657970;line-height:1.6}
+    .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin:24px 0}
+    .metric{border-left:2px solid #dce4da;padding-left:13px}
+    .metric b{display:block;font-size:25px;margin:6px 0}
+    .notice{background:#f7efdd;padding:15px;border-radius:8px;line-height:1.65;font-size:13px}
+    .legend{font-size:12px;color:#657970;display:flex;gap:18px;flex-wrap:wrap}
+    .steps{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px}
+    .check{display:flex;align-items:start;gap:10px;border-bottom:1px solid #e3e9df;padding:12px 0;font-size:14px;line-height:1.6}
+    .check input{margin-top:5px;accent-color:#21685b}
+    .hidden{display:none!important}
+    pre{white-space:pre-wrap;font:15px/1.8 system-ui}
+    .footer{font-size:11px;margin-top:25px}
+    .brief{max-width:850px;margin:auto}
+    svg{width:100%;height:240px}
+    details{margin-top:18px;font-size:13px;line-height:1.7}
+    @media(max-width:900px){.layout{grid-template-columns:1fr}.inputs{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}}
+    @media(max-width:600px){h1{font-size:35px}header{flex-wrap:wrap;gap:15px}.steps,.metrics{grid-template-columns:1fr}.inputs,.scenario-fields{display:block}.row{flex-wrap:wrap}main{padding:25px 5%}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">◈ FutureLife <span style="color:#6b8c76">Rehearsal</span></div>
+    <nav><button id="studioTab" class="active">Rehearsal studio</button> <button id="advisorTab">Advisor brief</button></nav>
+    <span class="badge">BFSI concept lab · synthetic data</span>
+  </header>
+  <main>
+    <section id="studio">
+      <div class="row">
+        <div>
+          <span class="eyebrow">A little clarity before a big decision</span>
+          <h1>Your life. A few possible futures.</h1>
+          <p>Rehearse a career break. Understand the trade-offs. Plan your next conversation.</p>
+        </div>
+        <button id="reset">New scenario</button>
+      </div>
+      <div class="layout">
+        <aside class="panel">
+          <span class="eyebrow">01 / Your starting point</span>
+          <h3>Maya’s household</h3>
+          <p>Age 47 · US household · USD<br><small>Editable sample information.</small></p>
+          <div class="inputs" id="inputs"></div>
+          <label for="goal">What matters most?</label>
+          <textarea id="goal"></textarea>
+          <p style="font-size:11px">Sample information only. Changes are saved in this browser.</p>
+        </aside>
+        <div>
+          <div class="panel">
+            <div class="row">
+              <div><span class="eyebrow">02 / Define one scenario</span><h2>What would you like to rehearse?</h2></div>
+              <span class="badge">Editable assumptions</span>
+            </div>
+            <p>Name your scenario and adjust its timing and income. Results update as you edit.</p>
+            <div class="scenario-fields">
+              <div class="wide">
+                <label for="scenarioName">Scenario name</label>
+                <input id="scenarioName" type="text" maxlength="80" placeholder="e.g. Take a year off to care">
+              </div>
+              <div>
+                <label for="preparationMonths">Months working before the break</label>
+                <input id="preparationMonths" type="number" min="0" max="60" step="1">
+              </div>
+              <div>
+                <label for="incomeRate">Take-home income retained during break (%)</label>
+                <input id="incomeRate" type="number" min="0" max="100" step="5">
+              </div>
+              <div class="wide">
+                <label for="months">Break duration: <b id="duration"></b> months</label>
+                <input type="range" id="months" min="1" max="36" value="6">
+              </div>
+            </div>
+            <div id="scenarioSummary" class="card" aria-live="polite"></div>
+            <div class="row">
+              <h3>Accessible savings over time</h3>
+              <span class="eyebrow">USD · month from today</span>
+            </div>
+            <svg id="chart" role="img" aria-label="Savings for the current scenario"></svg>
+            <div class="legend"><span id="scenarioLegend"></span><span>--- Emergency floor</span></div>
+            <div id="metrics" class="metrics"></div>
+            <div id="insight" class="notice" aria-live="polite"></div>
+            <details>
+              <summary>Assumptions and model limitations</summary>
+              <p id="assumptions"></p>
+            </details>
+          </div>
+          <div class="steps">
+            <div class="panel">
+              <span class="eyebrow">03 / Prepare for the next step</span>
+              <h3>Your preparation checklist</h3>
+              <div id="checks"></div>
+            </div>
+            <div class="panel">
+              <span class="eyebrow">04 / Bring the context</span>
+              <h3>A better advisor conversation</h3>
+              <p>Prepare a brief with your scenario, assumptions and unresolved questions. Nothing is sent automatically.</p>
+              <button class="primary" id="prepare">Prepare advisor brief →</button>
+              <p style="font-size:12px">AI conversation is simulated. Financial calculations use a deterministic model.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="advisor" class="hidden brief">
+      <span class="eyebrow">Advisor workspace / discussion preparation</span>
+      <h1>A decision worth discussing.</h1>
+      <p>Review these assumptions before considering any recommendation.</p>
+      <div class="panel">
+        <div class="row"><h2>Household rehearsal brief</h2><span class="badge">Draft · not sent</span></div>
+        <pre id="brief"></pre>
+        <label for="notes">Additional questions for your advisor</label>
+        <textarea id="notes" placeholder="What happens to employer health coverage during the break?"></textarea>
+        <label class="check"><input type="checkbox" id="consent">I reviewed the sample details and want to include them in the download.</label>
+        <div class="row" style="margin-top:20px">
+          <button class="primary" id="download">Download discussion brief</button>
+          <button id="back">← Back to rehearsal</button>
+        </div>
+        <p id="status" role="status"></p>
+      </div>
+    </section>
+    <p class="footer">Illustrative prototype · Synthetic data · Educational scenarios, not financial advice or a forecast · No account connections or transactions.</p>
+  </main>
+  <script src="model.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

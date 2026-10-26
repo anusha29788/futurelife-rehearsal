@@ -1,24 +1,13 @@
-function simulate(p, mode) {
+function simulate(p) {
   let cash = p.cash;
   let missed = 0;
   const series = [cash];
-  const delay = mode === 'prepare' || mode === 'hybrid' ? 6 : 0;
-  const retained = (p.partTimeRate ?? 50) / 100;
+  const preparationMonths = p.preparationMonths ?? 0;
+  const incomeRate = (p.incomeRate ?? 0) / 100;
 
-  for (let month = 0; month < delay + p.months; month++) {
-    const inBreak = month >= delay;
-    let retainedIncome = 1;
-
-    if (inBreak) {
-      if (mode === 'part' || mode === 'hybrid') {
-        retainedIncome = retained;
-      } else if (mode === 'phased') {
-        retainedIncome = month - delay >= Math.ceil(p.months / 2) ? retained : 0;
-      } else {
-        retainedIncome = 0;
-      }
-    }
-
+  for (let month = 0; month < preparationMonths + p.months; month++) {
+    const inBreak = month >= preparationMonths;
+    const retainedIncome = inBreak ? incomeRate : 1;
     cash += p.income * retainedIncome - p.expenses - (inBreak ? p.care : 0);
     if (inBreak) missed += p.retirement * (1 - retainedIncome);
     series.push(cash);
@@ -29,7 +18,7 @@ function simulate(p, mode) {
     series,
     missed,
     buffer: cash / (p.expenses + p.care),
-    months: delay + p.months
+    months: preparationMonths + p.months
   };
 }
 

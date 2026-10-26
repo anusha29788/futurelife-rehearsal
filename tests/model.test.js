@@ -7,39 +7,35 @@ const p = {
   care: 900,
   retirement: 900,
   months: 6,
-  partTimeRate: 50
+  preparationMonths: 0,
+  incomeRate: 0
 };
 
-assert.equal(simulate(p, 'now').cash, 30800);
-assert.equal(simulate(p, 'part').cash, 54800);
-assert.equal(simulate(p, 'prepare').cash, 50000);
-assert.equal(simulate(p, 'now').missed, 5400);
-assert.equal(simulate(p, 'part').missed, 2700);
-assert.equal(simulate({ ...p, months: 18 }, 'now').cash, -37600);
-assert.equal(simulate(p, 'prepare').series[6], 84200);
+const noIncome = simulate(p);
+assert.equal(noIncome.cash, 30800);
+assert.equal(noIncome.missed, 5400);
+assert.equal(noIncome.months, 6);
 
-const hybrid = simulate(p, 'hybrid');
-assert.equal(hybrid.cash, 74000);
-assert.equal(hybrid.missed, 2700);
-assert.equal(hybrid.months, 12);
+const partTime = simulate({ ...p, incomeRate: 50 });
+assert.equal(partTime.cash, 54800);
+assert.equal(partTime.missed, 2700);
 
-const phased = simulate(p, 'phased');
-assert.equal(phased.cash, 42800);
-assert.equal(phased.missed, 4050);
-assert.equal(phased.series[3], 47900);
-assert.equal(phased.series[4], 46200);
+const higherPartTime = simulate({ ...p, incomeRate: 75 });
+assert.equal(higherPartTime.cash, 66800);
+assert.equal(higherPartTime.missed, 1350);
 
-const oddPhased = simulate({ ...p, months: 5 }, 'phased');
-assert.equal(oddPhased.cash, 44500);
-assert.equal(oddPhased.missed, 3600);
+const prepared = simulate({ ...p, preparationMonths: 6 });
+assert.equal(prepared.cash, 50000);
+assert.equal(prepared.series[6], 84200);
+assert.equal(prepared.months, 12);
 
-const adjustedRate = simulate({ ...p, partTimeRate: 75 }, 'part');
-assert.equal(adjustedRate.cash, 66800);
-assert.equal(adjustedRate.missed, 1350);
-assert.equal(simulate({ ...p, partTimeRate: 75 }, 'hybrid').cash, 86000);
+const preparedPartTime = simulate({ ...p, preparationMonths: 6, incomeRate: 50 });
+assert.equal(preparedPartTime.cash, 74000);
+assert.equal(preparedPartTime.missed, 2700);
+assert.equal(preparedPartTime.series[6], 84200);
 
-const legacyProfile = { ...p };
-delete legacyProfile.partTimeRate;
-assert.equal(simulate(legacyProfile, 'part').cash, 54800);
+const longerBreak = simulate({ ...p, months: 18 });
+assert.equal(longerBreak.cash, -37600);
+assert.equal(longerBreak.months, 18);
 
-console.log('18 model assertions passed');
+console.log('15 dynamic scenario assertions passed');

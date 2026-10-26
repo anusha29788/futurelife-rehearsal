@@ -6,29 +6,40 @@ const defaults = {
   care: 900,
   retirement: 900,
   buffer: 6,
+  scenarioName: 'Take a career break',
+  preparationMonths: 0,
   months: 6,
-  partTimeRate: 50,
+  incomeRate: 0,
   goal: "I want to care for my father while protecting my family's emergency savings.",
   notes: '',
-  selected: 'now',
   checks: []
 };
 let p;
 try {
-  p = { ...defaults, ...JSON.parse(localStorage.getItem('futurelife-v1') || '{}') };
+  const stored = JSON.parse(localStorage.getItem('futurelife-v1') || '{}');
+  p = { ...defaults, ...stored };
+  if (!Object.hasOwn(stored, 'scenarioName')) {
+    const legacyMode = stored.selected;
+    p.scenarioName = {
+      now: 'Take the break now',
+      part: 'Work part-time',
+      prepare: 'Prepare for 6 months',
+      hybrid: 'Prepare + part-time',
+      phased: 'Phased return'
+    }[legacyMode] || defaults.scenarioName;
+    p.preparationMonths = ['prepare', 'hybrid'].includes(legacyMode) ? 6 : 0;
+    p.incomeRate = ['part', 'hybrid'].includes(legacyMode)
+      ? stored.partTimeRate ?? 50
+      : legacyMode === 'phased'
+        ? (stored.partTimeRate ?? 50) * Math.floor(p.months / 2) / p.months
+        : 0;
+    delete p.selected;
+    delete p.partTimeRate;
+  }
 } catch {
   p = { ...defaults };
 }
 
-const modes = ['now', 'part', 'prepare', 'hybrid', 'phased'];
-const names = {
-  now: 'Take the break now',
-  part: 'Work part-time',
-  prepare: 'Prepare for 6 months',
-  hybrid: 'Prepare + part-time',
-  phased: 'Phased return'
-};
-const colors = ['#21685b', '#b98632', '#7e8eae', '#537f9d', '#9b5d43'];
 const money = n => new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
@@ -39,7 +50,6 @@ const tasks = [
   'Review care costs and emergency savings needs',
   'Discuss the contribution gap and recovery plan with an advisor'
 ];
-const partTimeRate = () => p.partTimeRate;
 
 function save() {
   try {
@@ -47,69 +57,63 @@ function save() {
   } catch {}
 }
 
-function scenarioDetails(mode) {
-  const rate = partTimeRate();
-  if (mode === 'now') return 'No take-home income during the break';
-  if (mode === 'part') return `${rate}% take-home income retained throughout the break`;
-  if (mode === 'prepare') return '6 months of normal income first; no income during the break';
-  if (mode === 'hybrid') return `6 months of preparation, then ${rate}% income during the break`;
-  const noIncomeMonths = Math.ceil(p.months / 2);
-  const partTimeMonths = p.months - noIncomeMonths;
-  return partTimeMonths
-    ? `No income for ${noIncomeMonths} months, then ${rate}% for ${partTimeMonths} months`
-    : `No income throughout the ${p.months}-month break`;
-}
-
-const fields = [
-  ['cash', 'Accessible savings ($)', 0, 10000000],
-  ['income', 'Monthly take-home income ($)', 0, 1000000],
-  ['expenses', 'Monthly living expenses ($)', 1, 1000000],
-  ['care', 'Additional monthly care costs ($)', 0, 1000000],
-  ['retirement', 'Monthly employee retirement contribution ($)', 0, 100000],
-  ['buffer', 'Desired emergency buffer (months)', 1, 24],
-  ['partTimeRate', 'Part-time take-home income retained (%)', 0, 100]
+const householdFields = [
+  ['cash', 'Accessible savings ($)', 0, 10000000, 100],
+  ['income', 'Monthly take-home income ($)', 0, 1000000, 100],
+  ['expenses', 'Monthly living expenses ($)', 1, 1000000, 100],
+  ['care', 'Additional monthly care costs ($)', 0, 1000000, 100],
+  ['retirement', 'Monthly employee retirement contribution ($)', 0, 100000, 100],
+  ['buffer', 'Desired emergency buffer (months)', 1, 24, 1]
 ];
 
-fields.forEach(([key, title, min, max]) => {
-  const field = document.createElement('div');
-  const step = key === 'buffer' ? 1 : key === 'partTimeRate' ? 5 : 100;
-  field.innerHTML = `<label for="${key}">${title}</label><input type="number" id="${key}" min="${min}" max="${max}" step="${step}" value="${p[key]}">`;
-  $('inputs').append(field);
-  $(key).oninput = () => {
-    const value = Number($(key).value);
+function bindNumberInput(id, key, min, max) {
+  const input = $(id);
+  input.value = p[key];
+  input.oninput = () => {
+    if (input.value === '') return;
+    const value = Number(input.value);
     if (!Number.isFinite(value)) return;
     p[key] = Math.min(max, Math.max(min, value));
     save();
     render();
   };
-  $(key).onchange = () => {
-    $(key).value = p[key];
+  input.onchange = () => {
+    input.value = p[key];
   };
+}
+
+householdFields.forEach(([key, title, min, max, step]) => {
+  const field = document.createElement('div');
+  field.innerHTML = `<label for="${key}">${title}</label><input type="number" id="${key}" min="${min}" max="${max}" step="${step}">`;
+  $('inputs').append(field);
+  bindNumberInput(key, key, min, max);
 });
 
-$('months').value = p.months;
-$('goal').value = p.goal;
-$('notes').value = p.notes;
-['goal', 'notes'].forEach(key => {
-  $(key).oninput = () => {
-    p[key] = $(key).value;
-    save();
-    if (key === 'goal') brief();
-  };
-});
-$('months').oninput = () => {
-  p.months = +$('months').value;
+$('scenarioName').value = p.scenarioName;
+$('scenarioName').oninput = () => {
+  p.scenarioName = $('scenarioName').value.slice(0, 80);
   save();
   render();
 };
-document.querySelectorAll('[data-month]').forEach(button => {
-  button.onclick = () => {
-    p.months = +button.dataset.month;
-    $('months').value = p.months;
-    save();
-    render();
-  };
-});
+bindNumberInput('preparationMonths', 'preparationMonths', 0, 60);
+bindNumberInput('incomeRate', 'incomeRate', 0, 100);
+$('months').value = p.months;
+$('months').oninput = () => {
+  p.months = Number($('months').value);
+  save();
+  render();
+};
+$('goal').value = p.goal;
+$('goal').oninput = () => {
+  p.goal = $('goal').value;
+  save();
+  brief();
+};
+$('notes').value = p.notes;
+$('notes').oninput = () => {
+  p.notes = $('notes').value;
+  save();
+};
 
 tasks.forEach((task, index) => {
   const label = document.createElement('label');
@@ -128,75 +132,90 @@ tasks.forEach((task, index) => {
   $('checks').append(label);
 });
 
-function results() {
-  return Object.fromEntries(modes.map(mode => [mode, simulate(p, mode)]));
+function hasScenario() {
+  return Boolean(p.scenarioName.trim());
+}
+
+function scenarioDetails() {
+  const preparation = p.preparationMonths
+    ? `Work ${p.preparationMonths} months before the break`
+    : 'Break starts now';
+  return `${preparation}; ${p.months}-month break; ${p.incomeRate}% take-home income retained during the break`;
+}
+
+function renderChart(result, floor) {
+  const svg = $('chart');
+  svg.setAttribute('viewBox', '0 0 780 240');
+  if (!result) {
+    svg.setAttribute('aria-label', 'No scenario to display');
+    svg.innerHTML = '<text x="60" y="115" fill="#657970">Name a scenario to see its savings projection.</text>';
+    return;
+  }
+
+  svg.setAttribute('aria-label', `Projected savings for ${p.scenarioName}`);
+  const low = Math.min(0, ...result.series);
+  const high = Math.max(floor, ...result.series, 1);
+  const horizon = result.months;
+  const x = month => 60 + month / horizon * 680;
+  const y = value => 195 - (value - low) / (high - low) * 165;
+  let content = '';
+
+  for (let index = 0; index < 4; index++) {
+    const value = low + (high - low) * index / 3;
+    content += `<line x1="60" y1="${y(value)}" x2="740" y2="${y(value)}" stroke="#e2e9df"/><text x="2" y="${y(value) + 4}" font-size="11" fill="#657970">${Math.round(value / 1000)}k</text>`;
+  }
+
+  content += `<line x1="60" x2="740" y1="${y(floor)}" y2="${y(floor)}" stroke="#a18756" stroke-dasharray="5 5"/>`;
+  content += `<polyline fill="none" stroke="#21685b" stroke-width="4" points="${result.series.map((value, month) => `${x(month)},${y(value)}`).join(' ')}"/>`;
+  [0, Math.round(horizon / 2), horizon].forEach(month => {
+    content += `<text x="${x(month)}" y="225" font-size="11" fill="#657970">Month ${month}</text>`;
+  });
+  svg.innerHTML = content;
 }
 
 function render() {
-  const scenarios = results();
-  const selected = scenarios[p.selected] || scenarios.now;
+  const active = hasScenario();
+  const result = active ? simulate(p) : null;
   const floor = p.buffer * (p.expenses + p.care);
   $('duration').textContent = p.months;
-  $('cards').replaceChildren();
+  $('scenarioSummary').replaceChildren();
 
-  modes.forEach((mode, index) => {
-    const button = document.createElement('button');
-    button.className = `card${p.selected === mode ? ' selected' : ''}`;
-    button.setAttribute('aria-pressed', p.selected === mode);
-    button.innerHTML = `<span style="color:${colors[index]}">${names[mode]}</span><strong>${money(scenarios[mode].cash)}</strong><small>Ending savings · month ${scenarios[mode].months}<br>${scenarioDetails(mode)}</small>`;
-    button.onclick = () => {
-      p.selected = mode;
-      save();
-      render();
-    };
-    $('cards').append(button);
-  });
-
-  $('metrics').innerHTML = `<div class="metric"><span class="eyebrow">Ending buffer</span><b>${selected.buffer.toFixed(1)} months</b><small>of living + care expenses</small></div><div class="metric"><span class="eyebrow">Contribution gap</span><b>${money(selected.missed)}</b><small>employee contributions only</small></div><div class="metric"><span class="eyebrow">Emergency floor</span><b>${money(floor)}</b><small>your ${p.buffer}-month target</small></div>`;
-  $('insight').textContent = (selected.cash < 0
-    ? `This scenario has an unfunded cash gap of ${money(-selected.cash)}.`
-    : selected.cash < floor
-      ? `Ending savings fall ${money(floor - selected.cash)} below your chosen emergency floor.`
-      : `Ending savings remain ${money(selected.cash - floor)} above your chosen emergency floor.`)
-    + ' Review benefits, affordability and retirement assumptions with an advisor. This is a scenario explanation, not a recommendation.';
-
-  const legend = modes.map((mode, index) =>
-    `<span style="color:${colors[index]}">● ${names[mode]}</span>`
-  ).join('');
-  document.querySelector('.legend').innerHTML = legend + '<span>--- Emergency floor</span>';
-
-  const values = Object.values(scenarios).flatMap(result => result.series);
-  const low = Math.min(0, ...values);
-  const high = Math.max(floor, ...values, 1);
-  const horizon = p.months + 6;
-  const x = month => 60 + month / horizon * 680;
-  const y = value => 195 - (value - low) / (high - low) * 165;
-  let svg = '';
-  for (let index = 0; index < 4; index++) {
-    const value = low + (high - low) * index / 3;
-    svg += `<line x1="60" y1="${y(value)}" x2="740" y2="${y(value)}" stroke="#e2e9df"/><text x="2" y="${y(value) + 4}" font-size="11" fill="#657970">${Math.round(value / 1000)}k</text>`;
+  if (result) {
+    const title = document.createElement('span');
+    title.className = 'eyebrow';
+    title.textContent = p.scenarioName;
+    const ending = document.createElement('strong');
+    ending.textContent = money(result.cash);
+    const details = document.createElement('small');
+    details.textContent = `Ending savings · month ${result.months}. ${scenarioDetails()}`;
+    $('scenarioSummary').append(title, ending, details);
+    $('scenarioLegend').textContent = `● ${p.scenarioName} — accessible savings`;
+    $('metrics').innerHTML = `<div class="metric"><span class="eyebrow">Ending buffer</span><b>${result.buffer.toFixed(1)} months</b><small>of living + care expenses</small></div><div class="metric"><span class="eyebrow">Contribution gap</span><b>${money(result.missed)}</b><small>employee contributions only</small></div><div class="metric"><span class="eyebrow">Emergency floor</span><b>${money(floor)}</b><small>your ${p.buffer}-month target</small></div>`;
+    $('insight').textContent = (result.cash < 0
+      ? `This scenario has an unfunded cash gap of ${money(-result.cash)}.`
+      : result.cash < floor
+        ? `Ending savings fall ${money(floor - result.cash)} below your chosen emergency floor.`
+        : `Ending savings remain ${money(result.cash - floor)} above your chosen emergency floor.`)
+      + ' Review benefits, affordability and retirement assumptions with an advisor. This is a scenario explanation, not a recommendation.';
+  } else {
+    const prompt = document.createElement('small');
+    prompt.textContent = 'Enter a scenario name to calculate and display one scenario at a time.';
+    $('scenarioSummary').append(prompt);
+    $('scenarioLegend').textContent = 'No active scenario';
+    $('metrics').innerHTML = '<div class="metric"><span class="eyebrow">Ending buffer</span><b>—</b></div><div class="metric"><span class="eyebrow">Contribution gap</span><b>—</b></div><div class="metric"><span class="eyebrow">Emergency floor</span><b>—</b></div>';
+    $('insight').textContent = 'Set a scenario name and adjust the assumptions above to see an illustrative projection.';
   }
-  svg += `<line x1="60" x2="740" y1="${y(floor)}" y2="${y(floor)}" stroke="#a18756" stroke-dasharray="5 5"/>`;
-  modes.forEach((mode, index) => {
-    svg += `<polyline fill="none" stroke="${colors[index]}" stroke-width="${p.selected === mode ? 4 : 2}" points="${scenarios[mode].series.map((value, month) => `${x(month)},${y(value)}`).join(' ')}"/>`;
-  });
-  [0, Math.round(horizon / 2), horizon].forEach(month => {
-    svg += `<text x="${x(month)}" y="225" font-size="11" fill="#657970">Month ${month}</text>`;
-  });
-  $('chart').setAttribute('viewBox', '0 0 780 240');
-  $('chart').innerHTML = svg;
-  document.querySelector('details p').textContent = `Cash changes monthly by take-home income minus living expenses and, during the break, care costs. Part-time income and employee contributions use the selected ${partTimeRate()}% retention rate. Prepare delays the break six months; the combined strategy also retains part-time income during the break. Phased return has no income for the first ${Math.ceil(p.months / 2)} break months, then retains ${partTimeRate()}% for any remaining break months. The emergency floor equals ${p.buffer} months of living plus care expenses. Contribution gaps are shown separately and are not deducted again from take-home pay. No investment returns, taxes, inflation, employer match, benefits changes or penalties are modeled. Negative balances indicate an unfunded gap, not available credit. Scenario end dates differ; compare common months on the chart. Outputs are illustrative, not validated financial planning.`;
-  brief();
+
+  renderChart(result, floor);
+  $('assumptions').textContent = `Cash changes monthly by take-home income minus living expenses and, during the break, care costs. Income retained during the break is ${p.incomeRate}%. The scenario saves normal income for ${p.preparationMonths} month(s) before the break. The emergency floor equals ${p.buffer} months of living plus care expenses. Employee contribution gaps are shown separately and are not deducted again from take-home pay. No investment returns, taxes, inflation, employer match, benefits changes or penalties are modeled. Negative balances indicate an unfunded gap, not available credit. Outputs are illustrative, not validated financial planning.`;
+  brief(result);
 }
 
-function brief() {
-  const result = simulate(p, p.selected);
+function brief(result = hasScenario() ? simulate(p) : null) {
   $('brief').textContent = `MAYA · AGE 47 · SYNTHETIC HOUSEHOLD
 
 Priority: ${p.goal}
-Selected rehearsal: ${names[p.selected]}
-Scenario assumption: ${scenarioDetails(p.selected)}
-Career break: ${p.months} months | Scenario horizon: ${result.months} months
+${result ? `Scenario: ${p.scenarioName}\nAssumptions: ${scenarioDetails()}\nScenario horizon: ${result.months} months` : 'No active scenario. Return to the rehearsal studio to define one.'}
 
 INPUTS — participant-editable sample values
 Accessible savings: ${money(p.cash)}
@@ -204,13 +223,9 @@ Monthly take-home income: ${money(p.income)}
 Living expenses: ${money(p.expenses)} / month
 Additional care costs: ${money(p.care)} / break month
 Employee retirement contributions: ${money(p.retirement)} / month
-Part-time income and contribution retention: ${partTimeRate()}%
 Emergency floor: ${p.buffer} months
 
-ILLUSTRATIVE RESULTS
-Ending accessible savings: ${money(result.cash)}
-Ending expense buffer: ${result.buffer.toFixed(1)} months
-Employee contribution gap: ${money(result.missed)}
+${result ? `ILLUSTRATIVE RESULTS\nEnding accessible savings: ${money(result.cash)}\nEnding expense buffer: ${result.buffer.toFixed(1)} months\nEmployee contribution gap: ${money(result.missed)}` : 'Create a named scenario to calculate illustrative results.'}
 
 PREPARATION PROGRESS
 ${tasks.map((task, index) => (p.checks.includes(index) ? '[Reviewed] ' : '[Open] ') + task).join('\n')}
@@ -221,7 +236,7 @@ Are care costs and household income complete?
 What contribution recovery plan is affordable?
 
 MODEL LIMITS
-No returns, taxes, inflation, employer match, benefits changes or penalties. Part-time income and contributions use the selected retention rate. Prepare assumes 6 months of normal income before the break. Phased return assumes no income for the first half of the break, then the selected part-time rate for the rest. No recommendation or transaction has been made.`;
+No returns, taxes, inflation, employer match, benefits changes or penalties. Income during the break follows the editable retention rate. Preparation assumes normal income continues for the specified months before the break. No recommendation or transaction has been made.`;
 }
 
 function view(name) {
@@ -236,10 +251,23 @@ function view(name) {
 $('studioTab').onclick = $('back').onclick = () => view('studio');
 $('advisorTab').onclick = $('prepare').onclick = () => view('advisor');
 $('reset').onclick = () => {
-  localStorage.removeItem('futurelife-v1');
-  location.reload();
+  p.scenarioName = '';
+  p.preparationMonths = defaults.preparationMonths;
+  p.months = defaults.months;
+  p.incomeRate = defaults.incomeRate;
+  $('scenarioName').value = '';
+  $('preparationMonths').value = p.preparationMonths;
+  $('months').value = p.months;
+  $('incomeRate').value = p.incomeRate;
+  save();
+  render();
+  $('scenarioName').focus();
 };
 $('download').onclick = () => {
+  if (!hasScenario()) {
+    $('status').textContent = 'Create a named scenario before downloading the brief.';
+    return;
+  }
   if (!$('consent').checked) {
     $('status').textContent = 'Please review the brief and select the confirmation above.';
     return;
@@ -253,4 +281,5 @@ $('download').onclick = () => {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   $('status').textContent = 'Discussion brief downloaded. Nothing was sent to an advisor.';
 };
+
 render();
